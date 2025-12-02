@@ -3,235 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SimSimi Red Protocol</title>
+    <title>SimSimi Red Protocol (CORS FIX)</title>
     <style>
-        /* --- VARIAVEIS E CORES (Vermelho e Preto) --- */
+        /* --- ESTILOS (MANTIDOS) --- */
         :root {
-            --bg-body: #000000;          /* Preto absoluto */
-            --bg-container: #0a0a0a;     /* Preto quase absoluto */
-            --bg-header: #111111;        /* Cinza muito escuro */
+            --bg-body: #000000;
+            --bg-container: #0a0a0a;
+            --bg-header: #111111;
             --bg-input: #0f0f0f;
-            
-            --accent-red: #d32f2f;       /* Vermelho sangue */
-            --accent-red-hover: #b71c1c; /* Vermelho mais escuro para hover */
+            --accent-red: #d32f2f;
+            --accent-red-hover: #b71c1c;
             --glow-red: rgba(211, 47, 47, 0.3);
-            
-            --msg-user-bg: #8b0000;      /* Fundo da msg do usuário (Vinho) */
-            --msg-bot-bg: #1e1e1e;       /* Fundo da msg do bot (Cinza chumbo) */
-            
-            --text-primary: #ededed;     /* Branco gelo */
-            --text-secondary: #9ca3af;   /* Cinza claro */
-            --border-color: #330505;     /* Borda vermelha muito escura */
+            --msg-user-bg: #8b0000;
+            --msg-bot-bg: #1e1e1e;
+            --text-primary: #ededed;
+            --text-secondary: #9ca3af;
+            --border-color: #330505;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-primary);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* --- CONTAINER PRINCIPAL --- */
-        .app-container {
-            width: 100%;
-            max-width: 500px;
-            height: 90vh;
-            background-color: var(--bg-container);
-            border-radius: 12px;
-            /* Sombra vermelha brilhante (Glow effect) */
-            box-shadow: 0 0 20px var(--glow-red); 
-            border: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* --- HEADER --- */
-        header {
-            background-color: var(--bg-header);
-            padding: 15px 20px;
-            border-bottom: 2px solid var(--accent-red);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .avatar {
-            width: 42px;
-            height: 42px;
-            background-color: var(--accent-red);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-            box-shadow: 0 0 10px var(--accent-red);
-        }
-
-        .header-info h1 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: white;
-            letter-spacing: 0.5px;
-        }
-
-        .status {
-            font-size: 0.75rem;
-            color: var(--accent-red);
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            text-transform: uppercase;
-        }
-        
+        body { background-color: var(--bg-body); color: var(--text-primary); height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .app-container { width: 100%; max-width: 500px; height: 90vh; background-color: var(--bg-container); border-radius: 12px; box-shadow: 0 0 20px var(--glow-red); border: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; }
+        header { background-color: var(--bg-header); padding: 15px 20px; border-bottom: 2px solid var(--accent-red); display: flex; align-items: center; gap: 15px; }
+        .avatar { width: 42px; height: 42px; background-color: var(--accent-red); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; box-shadow: 0 0 10px var(--accent-red); }
+        .header-info h1 { font-size: 1.1rem; font-weight: 700; color: white; letter-spacing: 0.5px; }
+        .status { font-size: 0.75rem; color: var(--accent-red); font-weight: bold; display: flex; align-items: center; gap: 5px; text-transform: uppercase; }
         .status::before { content: ''; width: 8px; height: 8px; background-color: var(--accent-red); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--accent-red); }
-
-        /* --- ÁREA DE CHAT --- */
-        #chat-window {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            background-image: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); /* Degrade sutil */
-        }
-
-        /* Scrollbar personalizada Dark */
+        #chat-window { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background-image: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); }
         #chat-window::-webkit-scrollbar { width: 8px; }
         #chat-window::-webkit-scrollbar-track { background: #000; }
         #chat-window::-webkit-scrollbar-thumb { background-color: var(--accent-red); border-radius: 4px; }
-
-        /* --- MENSAGENS --- */
-        .message {
-            max-width: 85%;
-            padding: 12px 18px;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            position: relative;
-            animation: slideUp 0.3s ease-out;
-            word-wrap: break-word;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Bot: Cinza escuro com borda sutil */
-        .msg-bot {
-            align-self: flex-start;
-            background-color: var(--msg-bot-bg);
-            color: var(--text-primary);
-            border-left: 3px solid var(--accent-red); /* Detalhe vermelho */
-            border-bottom-left-radius: 2px;
-        }
-
-        /* User: Vermelho escuro */
-        .msg-user {
-            align-self: flex-end;
-            background-color: var(--msg-user-bg);
-            color: white;
-            border-right: 3px solid #ff5252; /* Detalhe vermelho claro */
-            border-bottom-right-radius: 2px;
-        }
-
-        .time-stamp {
-            display: block;
-            font-size: 0.65rem;
-            margin-top: 5px;
-            opacity: 0.6;
-            text-align: right;
-            font-style: italic;
-        }
-
-        /* --- INDICADOR DE DIGITANDO --- */
-        .typing-indicator {
-            display: none;
-            align-self: flex-start;
-            background-color: var(--msg-bot-bg);
-            padding: 15px;
-            border-radius: 12px;
-            border-left: 3px solid var(--accent-red);
-            width: fit-content;
-            margin-bottom: 10px;
-        }
-
-        .typing-indicator span {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background-color: var(--accent-red); /* Pontinhos vermelhos */
-            border-radius: 50%;
-            animation: blink 1.4s infinite both;
-            margin: 0 2px;
-        }
-
+        .message { max-width: 85%; padding: 12px 18px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; position: relative; animation: slideUp 0.3s ease-out; word-wrap: break-word; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .msg-bot { align-self: flex-start; background-color: var(--msg-bot-bg); color: var(--text-primary); border-left: 3px solid var(--accent-red); border-bottom-left-radius: 2px; }
+        .msg-user { align-self: flex-end; background-color: var(--msg-user-bg); color: white; border-right: 3px solid #ff5252; border-bottom-right-radius: 2px; }
+        .time-stamp { display: block; font-size: 0.65rem; margin-top: 5px; opacity: 0.6; text-align: right; font-style: italic; }
+        .typing-indicator { display: none; align-self: flex-start; background-color: var(--msg-bot-bg); padding: 15px; border-radius: 12px; border-left: 3px solid var(--accent-red); width: fit-content; margin-bottom: 10px; }
+        .typing-indicator span { display: inline-block; width: 8px; height: 8px; background-color: var(--accent-red); border-radius: 50%; animation: blink 1.4s infinite both; margin: 0 2px; }
         .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
         .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes blink {
-            0%, 100% { opacity: 0.2; transform: scale(0.8); }
-            50% { opacity: 1; transform: scale(1.2); }
-        }
-
-        /* --- INPUT AREA --- */
-        .input-area {
-            padding: 20px;
-            background-color: var(--bg-header);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            gap: 12px;
-        }
-
-        input {
-            flex: 1;
-            background-color: var(--bg-input);
-            border: 1px solid #333;
-            color: white;
-            padding: 14px 18px;
-            border-radius: 8px;
-            outline: none;
-            font-size: 1rem;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-        input:focus {
-            border-color: var(--accent-red);
-            box-shadow: 0 0 8px rgba(211, 47, 47, 0.2);
-        }
-
-        button {
-            background-color: var(--accent-red);
-            color: white;
-            border: none;
-            padding: 0 25px;
-            border-radius: 8px;
-            font-weight: 700;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.2s;
-            letter-spacing: 1px;
-        }
-
-        button:hover {
-            background-color: var(--accent-red-hover);
-            box-shadow: 0 0 10px var(--accent-red);
-        }
-        
-        button:disabled {
-            background-color: #555;
-            cursor: wait;
-            box-shadow: none;
-        }
+        @keyframes blink { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+        .input-area { padding: 20px; background-color: var(--bg-header); border-top: 1px solid var(--border-color); display: flex; gap: 12px; }
+        input { flex: 1; background-color: var(--bg-input); border: 1px solid #333; color: white; padding: 14px 18px; border-radius: 8px; outline: none; font-size: 1rem; transition: border-color 0.3s, box-shadow 0.3s; }
+        input:focus { border-color: var(--accent-red); box-shadow: 0 0 8px rgba(211, 47, 47, 0.2); }
+        button { background-color: var(--accent-red); color: white; border: none; padding: 0 25px; border-radius: 8px; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: all 0.2s; letter-spacing: 1px; }
+        button:hover { background-color: var(--accent-red-hover); box-shadow: 0 0 10px var(--accent-red); }
+        button:disabled { background-color: #555; cursor: wait; box-shadow: none; }
 
     </style>
 </head>
@@ -248,7 +65,7 @@
 
         <div id="chat-window">
             <div class="message msg-bot">
-                Sistema online. Aguardando input...
+                Sistema online. Aguardando input... (CORS FIX aplicado)
                 <span class="time-stamp">System</span>
             </div>
             <div class="typing-indicator" id="loading">
@@ -268,8 +85,13 @@
         const sendBtn = document.getElementById('sendBtn');
         const loadingIndicator = document.getElementById('loading');
 
-        // URL da API
-        const API_URL = "https://kuromi-system-tech.onrender.com/api/ai-simsimi?query=";
+        // URL original da API
+        const SIMSIMI_API = "https://kuromi-system-tech.onrender.com/api/ai-simsimi?query=";
+        
+        // URL do Proxy CORS que contorna o bloqueio do navegador.
+        // O formato é: https://decodo.com/ + https://www.youtube.com/watch?v=_j9jMqz2qVs
+        const CORS_PROXY_URL = "https://corsproxy.io/?"; 
+
 
         function getCurrentTime() {
             const now = new Date();
@@ -281,15 +103,9 @@
             msgDiv.classList.add('message');
             msgDiv.classList.add(sender === 'user' ? 'msg-user' : 'msg-bot');
             
-            // Tratamento de segurança básico para HTML injection
             const safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-            msgDiv.innerHTML = `
-                ${safeText}
-                <span class="time-stamp">${getCurrentTime()}</span>
-            `;
-
-            // Insere antes do indicador de "digitando"
+            msgDiv.innerHTML = `${safeText}<span class="time-stamp">${getCurrentTime()}</span>`;
             chatWindow.insertBefore(msgDiv, loadingIndicator);
             scrollToBottom();
         }
@@ -311,31 +127,40 @@
             userInput.value = '';
             
             sendBtn.disabled = true;
-            userInput.disabled = true; // Bloqueia input para evitar spam
+            userInput.disabled = true; 
             showLoading(true);
 
             try {
-                // Codifica a mensagem para a URL
-                const query = encodeURIComponent(text);
+                // Monta a URL FINAL: Proxy + (SimSimi API + Query)
+                const fullApiUrl = SIMSIMI_API + encodeURIComponent(text);
+                const finalUrl = CORS_PROXY_URL + encodeURIComponent(fullApiUrl); 
                 
-                const response = await fetch(`${API_URL}${query}`);
+                // IMPORTANTE: Envia a requisição para o proxy, que a encaminha para a API.
+                const response = await fetch(finalUrl);
                 
-                if (!response.ok) throw new Error("Erro na rede");
+                const responseText = await response.text();
+                
+                if (!response.ok) throw new Error(`Erro HTTP ${response.status}: Falha no Proxy ou Servidor.`);
 
-                const data = await response.json();
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    throw new Error(`Resposta inválida. Não é um JSON.`);
+                }
 
                 showLoading(false);
 
                 if (data && data.resposta) {
                     appendMessage(data.resposta, 'bot');
                 } else {
-                    appendMessage("Erro: A API não retornou uma resposta válida.", 'bot');
+                    appendMessage("Erro: A API não retornou o campo 'resposta'.", 'bot');
                 }
 
             } catch (error) {
                 showLoading(false);
-                console.error(error);
-                appendMessage("O servidor está reiniciando (cold start). Tente novamente em 1 minuto.", 'bot');
+                console.error('Falha detalhada (com Proxy):', error);
+                appendMessage(`[ERRO CRÍTICO] Falha ao conectar. Tente novamente, ou verifique se o proxy está online.`, 'bot');
             } finally {
                 sendBtn.disabled = false;
                 userInput.disabled = false;
@@ -349,9 +174,7 @@
             if (e.key === 'Enter') handleSend();
         });
         
-        // Foco inicial
         userInput.focus();
-
     </script>
 </body>
 </html>
