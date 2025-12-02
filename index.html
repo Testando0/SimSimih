@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SimSimi Mobile Protocol - FINAL FIX</title>
+    <title>SimSimi Mobile Protocol - FINAL</title>
     <style>
         /* --- VARIAVEIS E CORES --- */
         :root {
@@ -23,7 +23,6 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
 
-        /* Estilo base para garantir a altura total e centralização em PC */
         body {
             background-color: var(--bg-body);
             color: var(--text-primary);
@@ -35,10 +34,10 @@
             margin: 0;
         }
 
-        /* --- CONTAINER PRINCIPAL: FIX PARA NÃO CORTAR EM CELULAR --- */
+        /* --- CONTAINER PRINCIPAL: FIXO PARA NÃO CORTAR EM CELULAR --- */
         .app-container {
             width: 100%;
-            height: 100%; /* Ajusta à altura do fixed container */
+            height: 100%;
             max-width: 550px;
             background-color: var(--bg-container);
             border-radius: 0; 
@@ -54,7 +53,7 @@
             left: 0;
         }
 
-        /* Estilos para PC (Acima de 600px): remove o fixed e volta ao fluxo normal */
+        /* Estilos para PC: remove o fixed */
         @media (min-width: 600px) {
             .app-container {
                 position: static;
@@ -65,16 +64,9 @@
             }
         }
 
-        /* --- HEADER --- */
-        header { background-color: var(--bg-header); padding: 15px 20px; border-bottom: 2px solid var(--accent-red); display: flex; align-items: center; gap: 15px; }
-        .avatar { width: 42px; height: 42px; background-color: var(--accent-red); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; box-shadow: 0 0 10px var(--accent-red); }
-        .header-info h1 { font-size: 1.1rem; font-weight: 700; color: white; letter-spacing: 0.5px; }
-        .status { font-size: 0.75rem; color: var(--accent-red); font-weight: bold; display: flex; align-items: center; gap: 5px; text-transform: uppercase; }
-        .status::before { content: ''; width: 8px; height: 8px; background-color: var(--accent-red); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--accent-red); }
-
-        /* --- CHAT WINDOW --- */
+        /* --- CHAT WINDOW (Ocupa o espaço restante) --- */
         #chat-window {
-            flex: 1; /* Garante que ocupe todo o espaço entre Header e Input */
+            flex: 1; 
             padding: 15px;
             overflow-y: auto;
             display: flex;
@@ -110,13 +102,13 @@
             <div class="avatar">S</div>
             <div class="header-info">
                 <h1>SIMSIMI CORE</h1>
-                <div class="status">System Online (FIXED)</div>
+                <div class="status">System Online (Mobile Fixed)</div>
             </div>
         </header>
 
         <div id="chat-window">
             <div class="message msg-bot">
-                Bem-vindo! O design foi corrigido para não cortar em celulares. Tente as piadas novamente.
+                Sistema pronto. Se houver falha de conexão, reverta para a versão com Proxy CORS.
                 <span class="time-stamp">System</span>
             </div>
             <div class="typing-indicator" id="loading">
@@ -136,11 +128,10 @@
         const sendBtn = document.getElementById('sendBtn');
         const loadingIndicator = document.getElementById('loading');
 
-        // URL da API Bronxys Host
+        // URL da API Bronxys Host (LIMPA, sem proxy CORS)
         const BRONXYS_API_BASE_URL = "https://api.bronxyshost.com.br/api-bronxys/simsimi?apikey=KEY-TEMPORARIA-TELEGRAM-ALEATORY&pergunta=";
         
-        // CORS FIX: Proxy público para evitar o bloqueio 'Failed to fetch'
-        const CORS_PROXY_URL = "https://corsproxy.io/?"; 
+        // Removida a lógica CORS Proxy
         
         function getCurrentTime() {
             const now = new Date();
@@ -160,7 +151,6 @@
         }
 
         function scrollToBottom() {
-            // Usamos setTimeout para garantir que a rolagem ocorra DEPOIS que o DOM foi atualizado
             setTimeout(() => {
                 chatWindow.scrollTop = chatWindow.scrollHeight;
             }, 0);
@@ -183,8 +173,8 @@
             showLoading(true);
 
             try {
-                const fullApiUrl = BRONXYS_API_BASE_URL + encodeURIComponent(text);
-                const finalUrl = CORS_PROXY_URL + encodeURIComponent(fullApiUrl); 
+                // Requisição direta à API
+                const finalUrl = BRONXYS_API_BASE_URL + encodeURIComponent(text); 
                 
                 const response = await fetch(finalUrl);
                 const responseText = await response.text();
@@ -200,7 +190,7 @@
 
                 showLoading(false);
 
-                // LÓGICA DE CORREÇÃO DE BUG: TENTA VÁRIOS CAMPOS (resposta, message, erro, msg)
+                // LÓGICA DE TRATAMENTO DE ERROS FLEXÍVEL
                 let botResponse = '';
 
                 if (data && data.resposta) {
@@ -212,15 +202,16 @@
                 } else if (data && data.msg) {
                     botResponse = `[ERRO MSG]: ${data.msg}`;
                 } else {
-                    botResponse = "Erro: A API retornou um formato inesperado. Verifique a chave.";
+                    botResponse = "Erro: A API retornou um formato inesperado. Verifique a chave ou o tipo de consulta.";
                 }
 
                 appendMessage(botResponse, 'bot');
 
             } catch (error) {
                 showLoading(false);
-                console.error('Falha detalhada:', error);
-                appendMessage(`[ERRO CRÍTICO] Falha na requisição: ${error.message}.`, 'bot');
+                console.error('Falha detalhada (API Direta):', error);
+                // Mensagem específica para o usuário
+                appendMessage(`[ERRO CRÍTICO] Falha na requisição: ${error.message}. Tente novamente.`, 'bot');
             } finally {
                 sendBtn.disabled = false;
                 userInput.disabled = false;
