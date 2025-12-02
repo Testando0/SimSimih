@@ -3,53 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SimSimi Red Protocol (CORS FIX)</title>
+    <title>SimSimi Mobile Red Protocol</title>
     <style>
-        /* --- ESTILOS (MANTIDOS) --- */
+        /* --- VARIAVEIS E CORES (Vermelho e Preto) --- */
         :root {
             --bg-body: #000000;
             --bg-container: #0a0a0a;
             --bg-header: #111111;
             --bg-input: #0f0f0f;
+            
             --accent-red: #d32f2f;
             --accent-red-hover: #b71c1c;
             --glow-red: rgba(211, 47, 47, 0.3);
+            
             --msg-user-bg: #8b0000;
             --msg-bot-bg: #1e1e1e;
+            
             --text-primary: #ededed;
             --text-secondary: #9ca3af;
             --border-color: #330505;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: var(--bg-body); color: var(--text-primary); height: 100vh; display: flex; justify-content: center; align-items: center; }
-        .app-container { width: 100%; max-width: 500px; height: 90vh; background-color: var(--bg-container); border-radius: 12px; box-shadow: 0 0 20px var(--glow-red); border: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; }
-        header { background-color: var(--bg-header); padding: 15px 20px; border-bottom: 2px solid var(--accent-red); display: flex; align-items: center; gap: 15px; }
+
+        /* Estilo adaptado para celular: 100% da largura e altura */
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            min-height: 100vh; /* Garante altura total */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Alinha ao topo em telas grandes */
+            padding: 0; /* Remove padding externo */
+        }
+
+        /* --- CONTAINER PRINCIPAL (Mobile-First) --- */
+        .app-container {
+            width: 100%;
+            height: 100vh; /* Ocupa a altura total do dispositivo */
+            max-width: 550px; /* Limite em telas maiores (PC) */
+            background-color: var(--bg-container);
+            border-radius: 0; /* Sem bordas arredondadas em celular */
+            box-shadow: none; /* Sem sombra em celular */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: none;
+        }
+
+        /* Estilos para telas grandes (PC) */
+        @media (min-width: 600px) {
+            .app-container {
+                height: 90vh;
+                border-radius: 12px;
+                box-shadow: 0 0 20px var(--glow-red); 
+                margin: 20px 0;
+            }
+        }
+
+        /* --- HEADER --- */
+        header {
+            background-color: var(--bg-header);
+            padding: 15px 20px;
+            border-bottom: 2px solid var(--accent-red);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
         .avatar { width: 42px; height: 42px; background-color: var(--accent-red); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; box-shadow: 0 0 10px var(--accent-red); }
         .header-info h1 { font-size: 1.1rem; font-weight: 700; color: white; letter-spacing: 0.5px; }
         .status { font-size: 0.75rem; color: var(--accent-red); font-weight: bold; display: flex; align-items: center; gap: 5px; text-transform: uppercase; }
         .status::before { content: ''; width: 8px; height: 8px; background-color: var(--accent-red); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--accent-red); }
-        #chat-window { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background-image: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); }
+
+        /* --- CHAT WINDOW --- */
+        #chat-window {
+            flex: 1;
+            padding: 15px; /* Padding reduzido para celular */
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Espaçamento reduzido */
+            background-image: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%);
+        }
         #chat-window::-webkit-scrollbar { width: 8px; }
         #chat-window::-webkit-scrollbar-track { background: #000; }
         #chat-window::-webkit-scrollbar-thumb { background-color: var(--accent-red); border-radius: 4px; }
-        .message { max-width: 85%; padding: 12px 18px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; position: relative; animation: slideUp 0.3s ease-out; word-wrap: break-word; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* --- MENSAGENS --- */
+        .message { max-width: 90%; /* Aumenta o tamanho em celular */ padding: 10px 14px; /* Padding ajustado */ border-radius: 10px; font-size: 0.9rem; line-height: 1.4; word-wrap: break-word; }
         .msg-bot { align-self: flex-start; background-color: var(--msg-bot-bg); color: var(--text-primary); border-left: 3px solid var(--accent-red); border-bottom-left-radius: 2px; }
         .msg-user { align-self: flex-end; background-color: var(--msg-user-bg); color: white; border-right: 3px solid #ff5252; border-bottom-right-radius: 2px; }
-        .time-stamp { display: block; font-size: 0.65rem; margin-top: 5px; opacity: 0.6; text-align: right; font-style: italic; }
-        .typing-indicator { display: none; align-self: flex-start; background-color: var(--msg-bot-bg); padding: 15px; border-radius: 12px; border-left: 3px solid var(--accent-red); width: fit-content; margin-bottom: 10px; }
-        .typing-indicator span { display: inline-block; width: 8px; height: 8px; background-color: var(--accent-red); border-radius: 50%; animation: blink 1.4s infinite both; margin: 0 2px; }
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes blink { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
-        .input-area { padding: 20px; background-color: var(--bg-header); border-top: 1px solid var(--border-color); display: flex; gap: 12px; }
-        input { flex: 1; background-color: var(--bg-input); border: 1px solid #333; color: white; padding: 14px 18px; border-radius: 8px; outline: none; font-size: 1rem; transition: border-color 0.3s, box-shadow 0.3s; }
+        .time-stamp { display: block; font-size: 0.6rem; margin-top: 5px; opacity: 0.6; text-align: right; font-style: italic; }
+        
+        /* --- INDICADOR DE DIGITANDO --- */
+        .typing-indicator { display: none; align-self: flex-start; background-color: var(--msg-bot-bg); padding: 10px 14px; border-radius: 10px; border-left: 3px solid var(--accent-red); width: fit-content; margin-bottom: 5px; }
+        .typing-indicator span { display: inline-block; width: 6px; height: 6px; background-color: var(--accent-red); border-radius: 50%; animation: blink 1.4s infinite both; margin: 0 1.5px; }
+        
+        /* --- INPUT AREA --- */
+        .input-area {
+            padding: 10px; /* Padding ajustado para celular */
+            background-color: var(--bg-header);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px; /* Espaçamento reduzido */
+        }
+        input { flex: 1; background-color: var(--bg-input); border: 1px solid #333; color: white; padding: 10px 15px; border-radius: 20px; /* Mais arredondado */ outline: none; font-size: 0.9rem; transition: border-color 0.3s, box-shadow 0.3s; }
         input:focus { border-color: var(--accent-red); box-shadow: 0 0 8px rgba(211, 47, 47, 0.2); }
-        button { background-color: var(--accent-red); color: white; border: none; padding: 0 25px; border-radius: 8px; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: all 0.2s; letter-spacing: 1px; }
+        button { background-color: var(--accent-red); color: white; border: none; padding: 0 15px; border-radius: 20px; /* Mais arredondado */ font-weight: 700; text-transform: uppercase; cursor: pointer; transition: all 0.2s; letter-spacing: 1px; font-size: 0.9rem; }
         button:hover { background-color: var(--accent-red-hover); box-shadow: 0 0 10px var(--accent-red); }
         button:disabled { background-color: #555; cursor: wait; box-shadow: none; }
 
+        /* Keyframes */
+        @keyframes blink { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
     </style>
 </head>
 <body>
@@ -59,13 +124,13 @@
             <div class="avatar">S</div>
             <div class="header-info">
                 <h1>SIMSIMI CORE</h1>
-                <div class="status">System Active</div>
+                <div class="status">Mobile Active</div>
             </div>
         </header>
 
         <div id="chat-window">
             <div class="message msg-bot">
-                Sistema online. Aguardando input... (CORS FIX aplicado)
+                Bem-vindo! Agora usando a API Bronxys.
                 <span class="time-stamp">System</span>
             </div>
             <div class="typing-indicator" id="loading">
@@ -85,14 +150,11 @@
         const sendBtn = document.getElementById('sendBtn');
         const loadingIndicator = document.getElementById('loading');
 
-        // URL original da API
-        const SIMSIMI_API = "https://kuromi-system-tech.onrender.com/api/ai-simsimi?query=";
+        // NOVA URL da API (usando o formato da rota que você forneceu)
+        const BRONXYS_API_BASE_URL = "https://api.bronxyshost.com.br/api-bronxys/simsimi?apikey=KEY-TEMPORARIA-TELEGRAM-ALEATORY&pergunta=";
         
-        // URL do Proxy CORS que contorna o bloqueio do navegador.
-        // O formato é: https://decodo.com/ + https://www.youtube.com/watch?v=_j9jMqz2qVs
-        const CORS_PROXY_URL = "https://corsproxy.io/?"; 
-
-
+        // Remove a solução CORS, pois a nova API deve ser acessível diretamente.
+        
         function getCurrentTime() {
             const now = new Date();
             return now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
@@ -131,36 +193,36 @@
             showLoading(true);
 
             try {
-                // Monta a URL FINAL: Proxy + (SimSimi API + Query)
-                const fullApiUrl = SIMSIMI_API + encodeURIComponent(text);
-                const finalUrl = CORS_PROXY_URL + encodeURIComponent(fullApiUrl); 
+                // 1. Monta a URL FINAL (APENAS com a nova API)
+                const finalUrl = BRONXYS_API_BASE_URL + encodeURIComponent(text);
                 
-                // IMPORTANTE: Envia a requisição para o proxy, que a encaminha para a API.
                 const response = await fetch(finalUrl);
                 
                 const responseText = await response.text();
                 
-                if (!response.ok) throw new Error(`Erro HTTP ${response.status}: Falha no Proxy ou Servidor.`);
+                if (!response.ok) throw new Error(`Erro HTTP ${response.status}. Verifique se a KEY é válida.`);
 
                 let data;
                 try {
                     data = JSON.parse(responseText);
                 } catch (e) {
-                    throw new Error(`Resposta inválida. Não é um JSON.`);
+                    throw new Error(`Resposta inválida. Servidor retornou um formato não-JSON.`);
                 }
 
                 showLoading(false);
 
+                // 2. A API agora tem a resposta no formato "data.resposta" (conforme sua rota)
                 if (data && data.resposta) {
                     appendMessage(data.resposta, 'bot');
                 } else {
-                    appendMessage("Erro: A API não retornou o campo 'resposta'.", 'bot');
+                    // Trata caso a API retorne um erro ou campo inesperado
+                    appendMessage("Erro: Resposta API inválida (sem campo 'resposta').", 'bot');
                 }
 
             } catch (error) {
                 showLoading(false);
-                console.error('Falha detalhada (com Proxy):', error);
-                appendMessage(`[ERRO CRÍTICO] Falha ao conectar. Tente novamente, ou verifique se o proxy está online.`, 'bot');
+                console.error('Falha detalhada (Bronxys API):', error);
+                appendMessage(`[ERRO CRÍTICO] Falha na requisição: ${error.message}.`, 'bot');
             } finally {
                 sendBtn.disabled = false;
                 userInput.disabled = false;
