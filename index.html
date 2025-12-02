@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimSimi Dark Chat</title>
+    <style>
+        /* --- Paleta de Cores e Reset --- */
+        :root {
+            --bg-black-main: #0a0a0a; /* Preto fundo principal */
+            --bg-black-container: #121212; /* Preto fundo do chat */
+            --bg-black-input: #1e1e1e; /* Preto fundo dos inputs */
+            --msg-user-bg: #8b0000; /* Vermelho escuro para usuário */
+            --msg-bot-bg: #2b2b2b; /* Cinza bem escuro para o bot */
+            --text-red-bright: #ff3333; /* Vermelho brilhante para texto */
+            --text-red-dark: #cc0000; /* Vermelho mais escuro para bordas/detalhes */
+            --text-black: #000000; /* Preto para texto sobre fundo vermelho */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-black-main);
+            color: var(--text-red-bright);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        /* --- Container Principal do Chat --- */
+        .chat-container {
+            width: 100%;
+            max-width: 500px;
+            background-color: var(--bg-black-container);
+            border: 2px solid var(--text-red-dark);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(204, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            height: 80vh; /* Altura fixa para permitir rolagem */
+        }
+
+        /* --- Cabeçalho --- */
+        .chat-header {
+            background-color: var(--text-red-dark);
+            color: var(--text-black);
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--bg-black-main);
+        }
+
+        /* --- Área de Log de Mensagens (Rolagem) --- */
+        .chat-box {
+            flex: 1; /* Ocupa o espaço restante */
+            padding: 20px;
+            overflow-y: auto;
+            background-color: var(--bg-black-container);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Customização da barra de rolagem */
+        .chat-box::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-box::-webkit-scrollbar-track {
+            background: var(--bg-black-main);
+        }
+        .chat-box::-webkit-scrollbar-thumb {
+            background: var(--text-red-dark);
+            border-radius: 4px;
+        }
+
+        /* --- Estilo das Mensagens --- */
+        .message-row {
+            display: flex;
+            width: 100%;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            word-wrap: break-word;
+            position: relative;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mensagem do Usuário (Direita) */
+        .user-message-row {
+            justify-content: flex-end;
+        }
+        .user-message-bubble {
+            background-color: var(--msg-user-bg);
+            color: white; /* Texto branco fica melhor lido no vermelho escuro */
+            border-bottom-right-radius: 2px;
+            border: 1px solid var(--text-red-bright);
+        }
+
+        /* Mensagem do SimSimi (Esquerda) */
+        .bot-message-row {
+            justify-content: flex-start;
+        }
+        .bot-message-bubble {
+            background-color: var(--msg-bot-bg);
+            color: var(--text-red-bright);
+            border-bottom-left-radius: 2px;
+            border: 1px solid var(--text-red-dark);
+        }
+
+        .loading-bubble {
+            font-style: italic;
+            opacity: 0.7;
+        }
+
+        /* --- Área de Input --- */
+        .chat-input-area {
+            padding: 15px;
+            background-color: var(--bg-black-input);
+            border-top: 2px solid var(--text-red-dark);
+            display: flex;
+            gap: 10px;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 12px;
+            background-color: var(--bg-black-main);
+            border: 1px solid var(--text-red-dark);
+            color: var(--text-red-bright);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        #user-input::placeholder {
+            color: #7a2e2e;
+        }
+
+        #send-btn {
+            padding: 12px 20px;
+            background-color: var(--text-red-dark);
+            color: var(--text-black);
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #send-btn:hover {
+            background-color: var(--text-red-bright);
+        }
+        
+        #send-btn:disabled {
+             background-color: #5c0000;
+             color: #888;
+             cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            SIMSIMI AI (Red Protocol)
+        </div>
+        
+        <div class="chat-box" id="chat-box">
+            <div class="message-row bot-message-row">
+                <div class="message-bubble bot-message-bubble">
+                    Olá. Vamos conversar... se tiver coragem.
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="user-input" placeholder="Digite sua mensagem..." autocomplete="off">
+            <button id="send-btn">ENVIAR</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        // A URL da API fornecida
+        const API_URL = 'https://kuromi-system-tech.onrender.com/api/ai-simsimi?query=';
+
+        // Função para adicionar mensagens ao chat
+        function addMessage(message, sender) {
+            const messageRow = document.createElement('div');
+            messageRow.classList.add('message-row');
+
+            const bubble = document.createElement('div');
+            bubble.classList.add('message-bubble');
+            bubble.textContent = message;
+
+            if (sender === 'user') {
+                messageRow.classList.add('user-message-row');
+                bubble.classList.add('user-message-bubble');
+            } else {
+                messageRow.classList.add('bot-message-row');
+                bubble.classList.add('bot-message-bubble');
+                // Se for uma mensagem de "carregando", adiciona uma classe extra
+                if(message === '...') {
+                     bubble.classList.add('loading-bubble');
+                     bubble.id = 'loading-msg'; // ID para remover facilmente depois
+                }
+            }
+
+            messageRow.appendChild(bubble);
+            chatBox.appendChild(messageRow);
+            
+            // Rola para o final sempre que uma mensagem é adicionada
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Função para remover a mensagem de carregamento
+        function removeLoadingMessage() {
+            const loadingMsg = document.getElementById('loading-msg');
+            if (loadingMsg) {
+                loadingMsg.closest('.message-row').remove();
+            }
+        }
+
+        // Função principal para enviar a mensagem
+        async function sendMessage() {
+            const messageText = userInput.value.trim();
+            if (messageText === "") return;
+
+            // 1. Exibe a mensagem do usuário
+            addMessage(messageText, 'user');
+            userInput.value = '';
+            userInput.focus();
+            
+            // Desabilita o botão e input enquanto carrega
+            sendBtn.disabled = true;
+            userInput.disabled = true;
+
+            // 2. Exibe indicador de carregamento
+            addMessage('...', 'bot');
+
+            try {
+                // Codifica a mensagem para URL (importante para espaços e caracteres especiais)
+                const encodedMessage = encodeURIComponent(messageText);
+                
+                // 3. Faz a requisição para a API
+                const response = await fetch(API_URL + encodedMessage);
+                
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Remove o indicador de carregamento
+                removeLoadingMessage();
+
+                // 4. Verifica se a resposta da API tem o formato esperado {"resposta": "..."}
+                if (data && data.resposta) {
+                    addMessage(data.resposta, 'bot');
+                } else {
+                    addMessage("[Erro] Formato de resposta da API inesperado.", 'bot');
+                    console.error("Resposta inesperada:", data);
+                }
+
+            } catch (error) {
+                removeLoadingMessage();
+                addMessage(`[Erro de Conexão]: ${error.message}. O servidor pode estar dormindo. Tente novamente em 1 minuto.`, 'bot');
+                console.error('Falha na requisição:', error);
+            } finally {
+                // Reabilita o botão e input
+                sendBtn.disabled = false;
+                userInput.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        // Event Listeners
+        sendBtn.addEventListener('click', sendMessage);
+
+        // Permitir enviar com a tecla Enter
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Foco inicial no input
+        userInput.focus();
+    </script>
+</body>
+</html>
