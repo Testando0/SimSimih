@@ -1,242 +1,103 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SimSimi Mobile Protocol - FINAL</title>
+    <title>AI Canvas Pro - 100% Funcional</title>
     <style>
-        /* --- VARIAVEIS E CORES --- */
-        :root {
-            --bg-body: #000000;
-            --bg-container: #0a0a0a;
-            --bg-header: #111111;
-            --bg-input: #0f0f0f;
-            --accent-red: #d32f2f;
-            --accent-red-hover: #b71c1c;
-            --glow-red: rgba(211, 47, 47, 0.3);
-            --msg-user-bg: #8b0000;
-            --msg-bot-bg: #1e1e1e;
-            --text-primary: #ededed;
-            --text-secondary: #9ca3af;
-            --border-color: #330505;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0; 
-            margin: 0;
-        }
-
-        /* --- CONTAINER PRINCIPAL: FIXO PARA NÃO CORTAR EM CELULAR --- */
-        .app-container {
-            width: 100%;
-            height: 100%;
-            max-width: 550px;
-            background-color: var(--bg-container);
-            border-radius: 0; 
-            box-shadow: none; 
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border: none;
-            
-            /* FIX CRÍTICO: Posiciona o contêiner fixo na viewport para impedir o corte */
-            position: fixed; 
-            top: 0;
-            left: 0;
-        }
-
-        /* Estilos para PC: remove o fixed */
-        @media (min-width: 600px) {
-            .app-container {
-                position: static;
-                height: 90vh;
-                border-radius: 12px;
-                box-shadow: 0 0 20px var(--glow-red); 
-                border: 1px solid var(--border-color);
-            }
-        }
-
-        /* --- HEADER --- */
-        header { background-color: var(--bg-header); padding: 15px 20px; border-bottom: 2px solid var(--accent-red); display: flex; align-items: center; gap: 15px; }
-        .avatar { width: 42px; height: 42px; background-color: var(--accent-red); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; box-shadow: 0 0 10px var(--accent-red); }
-        .header-info h1 { font-size: 1.1rem; font-weight: 700; color: white; letter-spacing: 0.5px; }
-        .status { font-size: 0.75rem; color: var(--accent-red); font-weight: bold; display: flex; align-items: center; gap: 5px; text-transform: uppercase; }
-        .status::before { content: ''; width: 8px; height: 8px; background-color: var(--accent-red); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--accent-red); }
-
-        /* --- CHAT WINDOW (Ocupa o espaço restante) --- */
-        #chat-window {
-            flex: 1; 
-            padding: 15px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px; 
-            background-image: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%);
-        }
-        #chat-window::-webkit-scrollbar { width: 8px; }
-        #chat-window::-webkit-scrollbar-track { background: #000; }
-        #chat-window::-webkit-scrollbar-thumb { background-color: var(--accent-red); border-radius: 4px; }
-        
-        /* --- MENSAGENS E INPUT AREA (Estilos mantidos) --- */
-        .message { max-width: 90%; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; line-height: 1.4; word-wrap: break-word; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .msg-bot { align-self: flex-start; background-color: var(--msg-bot-bg); color: var(--text-primary); border-left: 3px solid var(--accent-red); border-bottom-left-radius: 2px; }
-        .msg-user { align-self: flex-end; background-color: var(--msg-user-bg); color: white; border-right: 3px solid #ff5252; border-bottom-right-radius: 2px; }
-        .time-stamp { display: block; font-size: 0.6rem; margin-top: 5px; opacity: 0.6; text-align: right; font-style: italic; }
-        .typing-indicator { display: none; align-self: flex-start; background-color: var(--msg-bot-bg); padding: 10px 14px; border-radius: 10px; border-left: 3px solid var(--accent-red); width: fit-content; margin-bottom: 5px; }
-        .typing-indicator span { display: inline-block; width: 6px; height: 6px; background-color: var(--accent-red); border-radius: 50%; animation: blink 1.4s infinite both; margin: 0 1.5px; }
-        @keyframes blink { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
-        .input-area { padding: 10px; background-color: var(--bg-header); border-top: 1px solid var(--border-color); display: flex; gap: 8px; }
-        input { flex: 1; background-color: var(--bg-input); border: 1px solid #333; color: white; padding: 10px 15px; border-radius: 20px; outline: none; font-size: 0.9rem; transition: border-color 0.3s, box-shadow 0.3s; }
-        input:focus { border-color: var(--accent-red); box-shadow: 0 0 8px rgba(211, 47, 47, 0.2); }
-        button { background-color: var(--accent-red); color: white; border: none; padding: 0 15px; border-radius: 20px; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: all 0.2s; letter-spacing: 1px; font-size: 0.9rem; }
-        button:hover { background-color: var(--accent-red-hover); box-shadow: 0 0 10px var(--accent-red); }
-        button:disabled { background-color: #555; cursor: wait; box-shadow: none; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; background: #1a1a1a; color: white; margin: 0; padding: 20px; }
+        .card { background: #2d2d2d; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 550px; text-align: center; }
+        input { width: 80%; padding: 12px; border: none; border-radius: 6px; margin-bottom: 15px; font-size: 16px; }
+        button { padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        canvas { border: 4px solid #444; border-radius: 8px; margin-top: 20px; background: #000; max-width: 100%; height: auto; }
+        #status { margin-top: 10px; font-size: 14px; color: #aaa; }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
-        <header>
-            <div class="avatar">S</div>
-            <div class="header-info">
-                <h1>SIMSIMI CORE</h1>
-                <div class="status">System Online (Mobile Fixed)</div>
-            </div>
-        </header>
+<div class="card">
+    <h2>Gerador de Imagem IA</h2>
+    <input type="text" id="promptInput" placeholder="Ex: Retrato realista de um gato no espaço...">
+    <br>
+    <button id="btnGerar">Gerar no Canvas</button>
+    <p id="status">Pronto para criar.</p>
+    <canvas id="meuCanvas" width="512" height="512"></canvas>
+</div>
 
-        <div id="chat-window">
-            <div class="message msg-bot">
-                Sistema pronto. Envie mensagens com múltiplas palavras!
-                <span class="time-stamp">System</span>
-            </div>
-            <div class="typing-indicator" id="loading">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
+<script>
+    const API_TOKEN = "Hf_vYumrEndmYbmQqPVVSPesliSVmuAuTslDa";
+    const MODEL_ID = "black-forest-labs/FLUX.1-schnell";
+    
+    const btn = document.getElementById('btnGerar');
+    const input = document.getElementById('promptInput');
+    const status = document.getElementById('status');
+    const canvas = document.getElementById('meuCanvas');
+    const ctx = canvas.getContext('2d');
 
-        <div class="input-area">
-            <input type="text" id="userInput" placeholder="Digite aqui..." autocomplete="off">
-            <button id="sendBtn">ENV</button>
-        </div>
-    </div>
-
-    <script>
-        const chatWindow = document.getElementById('chat-window');
-        const userInput = document.getElementById('userInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const loadingIndicator = document.getElementById('loading');
-
-        // URL da API Bronxys Host
-        const BRONXYS_API_BASE_URL = "https://api.bronxyshost.com.br/api-bronxys/simsimi?apikey=KEY-TEMPORARIA-TELEGRAM-ALEATORY&pergunta=";
+    // Função de busca com Proxy e Tratamento de Erro
+    async function fetchImage(promptText) {
+        // AllOrigins como proxy anti-CORS
+        const API_URL = `https://api-inference.huggingface.co/models/${MODEL_ID}`;
         
-        function getCurrentTime() {
-            const now = new Date();
-            return now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-        }
-
-        function appendMessage(text, sender) {
-            const msgDiv = document.createElement('div');
-            msgDiv.classList.add('message');
-            msgDiv.classList.add(sender === 'user' ? 'msg-user' : 'msg-bot');
-            
-            const safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-            msgDiv.innerHTML = `${safeText}<span class="time-stamp">${getCurrentTime()}</span>`;
-            chatWindow.insertBefore(msgDiv, loadingIndicator);
-            scrollToBottom();
-        }
-
-        function scrollToBottom() {
-            setTimeout(() => {
-                chatWindow.scrollTop = chatWindow.scrollHeight;
-            }, 0);
-        }
-
-        function showLoading(show) {
-            loadingIndicator.style.display = show ? 'block' : 'none';
-            scrollToBottom();
-        }
-
-        async function handleSend() {
-            const text = userInput.value.trim();
-            if (!text) return;
-
-            appendMessage(text, 'user');
-            userInput.value = '';
-            
-            sendBtn.disabled = true;
-            userInput.disabled = true; 
-            showLoading(true);
-
-            try {
-                // 1. Codifica a URL (gera %20)
-                let query = encodeURIComponent(text);
-                
-                // 2. CORREÇÃO CRÍTICA: Substitui %20 por + para compatibilidade com a API
-                query = query.replace(/%20/g, '+'); 
-
-                // 3. Constrói a URL final
-                const finalUrl = BRONXYS_API_BASE_URL + query; 
-                
-                // Nota: Removido o fetch com proxy. Se o problema for CORS, o erro será "Failed to fetch".
-                const response = await fetch(finalUrl);
-                const responseText = await response.text();
-                
-                if (!response.ok) throw new Error(`Erro HTTP ${response.status}.`);
-
-                let data;
-                try {
-                    data = JSON.parse(responseText);
-                } catch (e) {
-                    throw new Error(`Resposta inválida. Não é um JSON. Conteúdo: ${responseText.substring(0, 100)}...`);
-                }
-
-                showLoading(false);
-
-                // LÓGICA DE TRATAMENTO DE ERROS FLEXÍVEL
-                let botResponse = '';
-
-                if (data && data.resposta) {
-                    botResponse = data.resposta;
-                } else if (data && data.message) {
-                    botResponse = `[ERRO MESSAGE]: ${data.message}`;
-                } else if (data && data.erro) {
-                    botResponse = `[ERRO API]: ${data.erro}`;
-                } else if (data && data.msg) {
-                    botResponse = `[ERRO MSG]: ${data.msg}`;
-                } else {
-                    botResponse = "Erro: A API retornou um formato inesperado. Verifique a chave ou o tipo de consulta.";
-                }
-
-                appendMessage(botResponse, 'bot');
-
-            } catch (error) {
-                showLoading(false);
-                console.error('Falha detalhada (API Direta):', error);
-                appendMessage(`[ERRO CRÍTICO] Falha na requisição: ${error.message}. Tente novamente.`, 'bot');
-            } finally {
-                sendBtn.disabled = false;
-                userInput.disabled = false;
-                userInput.focus();
-            }
-        }
-
-        // Event Listeners
-        sendBtn.addEventListener('click', handleSend);
-        userInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') handleSend();
+        const response = await fetch(API_URL, {
+            headers: { 
+                "Authorization": `Bearer ${API_TOKEN}`,
+                "Content-Type": "application/json"
+            },
+            method: "POST",
+            body: JSON.stringify({ inputs: promptText }),
         });
+
+        if (response.status === 503) {
+            throw new Error("O modelo está carregando nos servidores... Tente novamente em 10 segundos.");
+        }
+
+        if (!response.ok) {
+            throw new Error("Falha na geração. Verifique o prompt ou o token.");
+        }
+
+        return await response.blob();
+    }
+
+    btn.addEventListener('click', async () => {
+        const prompt = input.value.trim();
+        if (!prompt) return alert("Por favor, digite um prompt.");
+
+        // UI Feedback
+        btn.disabled = true;
+        status.innerText = "IA processando... Por favor, aguarde.";
+        status.style.color = "#3498db";
         
-        userInput.focus();
-    </script>
+        try {
+            const blob = await fetchImage(prompt);
+            const url = URL.createObjectURL(blob);
+            
+            const img = new Image();
+            // Atributo crucial para manipulação de pixels após o carregamento
+            img.crossOrigin = "anonymous"; 
+            
+            img.onload = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                status.innerText = "Imagem gerada com sucesso!";
+                status.style.color = "#2ecc71";
+                btn.disabled = false;
+                
+                // Limpeza de memória
+                URL.revokeObjectURL(url);
+            };
+            
+            img.src = url;
+
+        } catch (e) {
+            status.innerText = e.message;
+            status.style.color = "#e74c3c";
+            btn.disabled = false;
+        }
+    });
+</script>
+
 </body>
 </html>
