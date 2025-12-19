@@ -2,102 +2,91 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Canvas Pro - 100% Funcional</title>
+    <title>AI Canvas Ultra - Stable Version</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; background: #1a1a1a; color: white; margin: 0; padding: 20px; }
-        .card { background: #2d2d2d; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 550px; text-align: center; }
-        input { width: 80%; padding: 12px; border: none; border-radius: 6px; margin-bottom: 15px; font-size: 16px; }
-        button { padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        button:hover { background: #0056b3; }
-        button:disabled { background: #555; cursor: not-allowed; }
-        canvas { border: 4px solid #444; border-radius: 8px; margin-top: 20px; background: #000; max-width: 100%; height: auto; }
-        #status { margin-top: 10px; font-size: 14px; color: #aaa; }
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #121212; color: #fff; padding: 20px; }
+        .box { background: #1e1e1e; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #333; }
+        input { padding: 12px; width: 300px; border-radius: 5px; border: none; outline: none; }
+        button { padding: 12px 20px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:disabled { background: #555; }
+        canvas { border: 2px solid #444; margin-top: 20px; max-width: 100%; border-radius: 5px; }
+        #msg { color: #f1c40f; margin-top: 10px; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>Gerador de Imagem IA</h2>
-    <input type="text" id="promptInput" placeholder="Ex: Retrato realista de um gato no espaço...">
-    <br>
-    <button id="btnGerar">Gerar no Canvas</button>
-    <p id="status">Pronto para criar.</p>
-    <canvas id="meuCanvas" width="512" height="512"></canvas>
+<div class="box">
+    <h2>Gerador Pro (Hugging Face)</h2>
+    <input type="text" id="promptInput" placeholder="Descreva a imagem aqui...">
+    <button id="btn">Gerar</button>
+    <p id="msg">Aguardando comando...</p>
+    <canvas id="canvas" width="512" height="512"></canvas>
 </div>
 
 <script>
-    const API_TOKEN = "Hf_vYumrEndmYbmQqPVVSPesliSVmuAuTslDa";
-    const MODEL_ID = "black-forest-labs/FLUX.1-schnell";
-    
-    const btn = document.getElementById('btnGerar');
+    const TOKEN = "Hf_vYumrEndmYbmQqPVVSPesliSVmuAuTslDa";
+    const MODEL = "black-forest-labs/FLUX.1-schnell";
+
+    const btn = document.getElementById('btn');
     const input = document.getElementById('promptInput');
-    const status = document.getElementById('status');
-    const canvas = document.getElementById('meuCanvas');
-    const ctx = canvas.getContext('2d');
+    const msg = document.getElementById('msg');
+    const cvs = document.getElementById('canvas');
+    const ctx = cvs.getContext('2d');
 
-    // Função de busca com Proxy e Tratamento de Erro
-    async function fetchImage(promptText) {
-        // AllOrigins como proxy anti-CORS
-        const API_URL = `https://api-inference.huggingface.co/models/${MODEL_ID}`;
-        
-        const response = await fetch(API_URL, {
-            headers: { 
-                "Authorization": `Bearer ${API_TOKEN}`,
-                "Content-Type": "application/json"
-            },
-            method: "POST",
-            body: JSON.stringify({ inputs: promptText }),
-        });
+    async function generate() {
+        const text = input.value.trim();
+        if(!text) return;
 
-        if (response.status === 503) {
-            throw new Error("O modelo está carregando nos servidores... Tente novamente em 10 segundos.");
-        }
-
-        if (!response.ok) {
-            throw new Error("Falha na geração. Verifique o prompt ou o token.");
-        }
-
-        return await response.blob();
-    }
-
-    btn.addEventListener('click', async () => {
-        const prompt = input.value.trim();
-        if (!prompt) return alert("Por favor, digite um prompt.");
-
-        // UI Feedback
         btn.disabled = true;
-        status.innerText = "IA processando... Por favor, aguarde.";
-        status.style.color = "#3498db";
-        
+        msg.innerText = "Conectando ao servidor da IA...";
+        ctx.clearRect(0, 0, cvs.width, cvs.height);
+
         try {
-            const blob = await fetchImage(prompt);
+            const response = await fetch(
+                `https://api-inference.huggingface.co/models/${MODEL}`,
+                {
+                    headers: { 
+                        "Authorization": `Bearer ${TOKEN}`,
+                        "Content-Type": "application/json"
+                    },
+                    method: "POST",
+                    body: JSON.stringify({ inputs: text }),
+                }
+            );
+
+            // Se o modelo estiver carregando (Erro 503), tentamos avisar o usuário
+            if (response.status === 503) {
+                throw new Error("Modelo acordando... Tente clicar novamente em 15 segundos.");
+            }
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error || "Erro desconhecido na API");
+            }
+
+            const blob = await response.blob();
             const url = URL.createObjectURL(blob);
-            
             const img = new Image();
-            // Atributo crucial para manipulação de pixels após o carregamento
-            img.crossOrigin = "anonymous"; 
             
+            img.crossOrigin = "anonymous"; 
             img.onload = () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                status.innerText = "Imagem gerada com sucesso!";
-                status.style.color = "#2ecc71";
+                ctx.drawImage(img, 0, 0, 512, 512);
+                msg.innerText = "Sucesso!";
+                msg.style.color = "#2ecc71";
                 btn.disabled = false;
-                
-                // Limpeza de memória
                 URL.revokeObjectURL(url);
             };
-            
             img.src = url;
 
         } catch (e) {
-            status.innerText = e.message;
-            status.style.color = "#e74c3c";
+            console.error(e);
+            msg.innerText = "Erro: " + e.message;
+            msg.style.color = "#e74c3c";
             btn.disabled = false;
         }
-    });
-</script>
+    }
 
+    btn.addEventListener('click', generate);
+</script>
 </body>
 </html>
