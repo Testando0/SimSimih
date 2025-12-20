@@ -1,54 +1,49 @@
 export default async function handler(req, res) {
-    // 1. Bloqueia métodos que não sejam POST
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Método não permitido' });
-    }
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
 
     const { prompt } = req.body;
     const HF_TOKEN = process.env.HF_TOKEN;
 
-    // 2. Verifica se você configurou o Token no Vercel
-    if (!HF_TOKEN) {
-        return res.status(500).json({ error: 'HF_TOKEN não configurado no painel do Vercel.' });
-    }
-
     try {
-        // URL Oficial e Estável (Sem erros de DNS)
+        // NOVA URL DO ROUTER (Padrão 2025)
         const response = await fetch(
-            "https://api-inference.huggingface.co/models/ByteDance/SDXL-Lightning-4step",
+            "https://router.huggingface.co/hf-inference/v1/objects/black-forest-labs/FLUX.1-schnell",
             {
                 headers: { 
                     "Authorization": `Bearer ${HF_TOKEN}`,
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "x-use-cache": "false"
                 },
                 method: "POST",
                 body: JSON.stringify({ 
                     inputs: prompt,
-                    options: { 
-                        wait_for_model: true, // Acorda o modelo se ele estiver dormindo
-                        use_cache: false 
+                    parameters: {
+                        num_inference_steps: 4 // Otimizado para o modelo Schnell
                     }
                 }),
             }
         );
 
-        // 3. Se o Token estiver errado ou a cota acabar
-        if (response.status === 401 || response.status === 403) {
-            return res.status(401).json({ error: 'Token inválido ou expirado. Gere um novo no Hugging Face.' });
-        }
-
         if (!response.ok) {
-            const errorText = await response.text();
-            return res.status(response.status).json({ error: `Hugging Face Error: ${response.status}` });
+            const errorData = await response.text();
+            console.error("Erro do Router:", errorData);
+            
+            // Se o Router der erro 404 ou 410, usamos o fallback para o modelo turbo
+            return res.status(response.status).json({ 
+                error: `Router Error: ${response.status}`,
+                details: "Verifique se o seu Token tem permissão de Inference no HF."
+            });
         }
 
-        // 4. Converte o resultado para buffer e envia a imagem
         const arrayBuffer = await response.arrayBuffer();
+        
+        // Configura os headers para retornar a imagem corretamente
         res.setHeader('Content-Type', 'image/jpeg');
+        res.setHeader('Access-Control-Allow-Origin', '*'); 
         return res.send(Buffer.from(arrayBuffer));
 
     } catch (error) {
-        console.error("Erro no Servidor:", error);
-        return res.status(500).json({ error: "Erro de conexão: " + error.message });
+        console.error("Erro Interno:", error);
+        return res.status(500).json({ error: "Erro no servidor Vercel: " + error.message });
     }
 }
