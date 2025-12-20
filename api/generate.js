@@ -1,12 +1,15 @@
 export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Apenas POST permitido' });
+    }
 
     const { prompt } = req.body;
     const HF_TOKEN = process.env.HF_TOKEN;
 
     try {
+        // ATUALIZADO: Usando a nova URL router.huggingface.co
         const response = await fetch(
-            "https://api-inference.huggingface.co/models/Tongyi-MAI/Z-Image-Turbo",
+            "https://router.huggingface.co/hf-inference/v1/objects/Tongyi-MAI/Z-Image-Turbo",
             {
                 headers: { 
                     "Authorization": `Bearer ${HF_TOKEN}`,
@@ -15,19 +18,18 @@ export default async function handler(req, res) {
                 method: "POST",
                 body: JSON.stringify({ 
                     inputs: prompt,
-                    options: { wait_for_model: true } // ESSENCIAL: Evita erro 503 enquanto o modelo liga
+                    parameters: {
+                        // O modelo Z-Image-Turbo ignora isso, mas ajuda a manter o padrão
+                        num_inference_steps: 1 
+                    }
                 }),
             }
         );
 
-        // Se o erro for 503 (ainda carregando), avisamos o usuário
-        if (response.status === 503) {
-            return res.status(503).json({ error: "O modelo está acordando... tente novamente em 15 segundos." });
-        }
-
         if (!response.ok) {
-            const errData = await response.json();
-            return res.status(response.status).json({ error: errData.error || "Falha na API" });
+            const errorData = await response.text();
+            console.error("Erro HF:", errorData);
+            return res.status(response.status).json({ error: "Erro na API do Hugging Face. Verifique se o modelo está online." });
         }
 
         const arrayBuffer = await response.arrayBuffer();
@@ -35,6 +37,7 @@ export default async function handler(req, res) {
         return res.send(Buffer.from(arrayBuffer));
 
     } catch (error) {
-        return res.status(500).json({ error: "Erro interno: " + error.message });
+        console.error("Erro Interno:", error);
+        return res.status(500).json({ error: "Erro interno no servidor: " + error.message });
     }
 }
