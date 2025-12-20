@@ -1,194 +1,79 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Imagens AI com Puter.js</title>
-    <script src="https://js.puter.com/v2/"></script>
-    
+    <title>AI Image Generator - Ultra Fast</title>
+    <script src="https://cdn.jsdelivr.net/npm/@huggingface/inference@2.6.4/dist/index.umd.min.js"></script>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f0f2f5;
-            color: #333;
-        }
-        .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 25px;
-        }
-        .controls {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        input[type="text"] {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            min-width: 250px;
-            font-size: 16px;
-        }
-        select {
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            background-color: #fff;
-            cursor: pointer;
-        }
-        button {
-            padding: 12px 24px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        #result-area {
-            margin-top: 30px;
-            min-height: 200px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        #result-area img {
-            max-width: 100%;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            animation: fadeIn 0.5s ease-in;
-        }
-        .loading {
-            color: #666;
-            font-style: italic;
-            display: none;
-        }
-        .loading::after {
-            content: "...";
-            animation: dots 1.5s steps(5, end) infinite;
-        }
-        .error {
-            color: #dc3545;
-            padding: 10px;
-            background-color: #ffe6e6;
-            border-radius: 4px;
-            display: none;
-        }
-        
-        @keyframes dots {
-            0%, 20% { content: "."; }
-            40% { content: ".."; }
-            60% { content: "..."; }
-            80%, 100% { content: ""; }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .container { background: #1e1e1e; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 90%; max-width: 500px; text-align: center; }
+        h1 { color: #00d4ff; margin-bottom: 1rem; }
+        textarea { width: 100%; height: 100px; padding: 10px; border-radius: 8px; border: none; background: #2d2d2d; color: white; resize: none; box-sizing: border-box; margin-bottom: 1rem; }
+        button { background: #00d4ff; color: #121212; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
+        button:hover { background: #008fb3; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        #result { margin-top: 1.5rem; width: 100%; min-height: 300px; display: flex; align-items: center; justify-content: center; border: 2px dashed #333; border-radius: 10px; overflow: hidden; }
+        img { width: 100%; height: auto; display: block; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #00d4ff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Gerador de Imagens Ilimitado</h1>
-        <p>Digite sua descrição abaixo e crie imagens usando a API do Puter.js</p>
+<div class="container">
+    <h1>Z-Image Generator</h1>
+    <p>Modelo: Tongyi-MAI/Z-Image-Turbo</p>
+    <textarea id="prompt" placeholder="Descreva a imagem que você quer gerar (em inglês funciona melhor)..."></textarea>
+    <button id="generateBtn">Gerar Imagem</button>
 
-        <div class="controls">
-            <input type="text" id="prompt-input" placeholder="Ex: Um gato astronauta no espaço, estilo cyberpunk..." required>
-            
-            <select id="model-select">
-                <option value="gpt-image-1.5">GPT Image 1.5 (Padrão)</option>
-                <option value="dall-e-3">DALL-E 3</option>
-                <option value="gpt-image-1">GPT Image 1</option>
-                <option value="gpt-image-1-mini">GPT Image 1 Mini</option>
-            </select>
-
-            <button id="generate-btn" onclick="generateImage()">Criar Imagem</button>
-        </div>
-
-        <div id="result-area">
-            <div id="loading-msg" class="loading">Criando sua arte, por favor aguarde</div>
-            <div id="error-msg" class="error"></div>
-            </div>
+    <div id="result">
+        <span style="color: #666;">A imagem aparecerá aqui</span>
     </div>
+</div>
 
-    <script>
-        async function generateImage() {
-            const promptInput = document.getElementById('prompt-input');
-            const modelSelect = document.getElementById('model-select');
-            const resultArea = document.getElementById('result-area');
-            const loadingMsg = document.getElementById('loading-msg');
-            const errorMsg = document.getElementById('error-msg');
-            const btn = document.getElementById('generate-btn');
+<script>
+    // Configurações
+    const HF_TOKEN = "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";
+    const MODEL_ID = "Tongyi-MAI/Z-Image-Turbo"; // O modelo que você escolheu (Opção 2)
 
-            // 1. Validação básica
-            const prompt = promptInput.value.trim();
-            if (!prompt) {
-                alert("Por favor, digite uma descrição para a imagem.");
-                return;
-            }
+    const hf = new window.HfInference(HF_TOKEN);
+    
+    const btn = document.getElementById('generateBtn');
+    const promptInput = document.getElementById('prompt');
+    const resultDiv = document.getElementById('result');
 
-            // 2. Resetar estado da interface
-            // Remove imagens anteriores (mas mantém as mensagens de loading/erro)
-            const oldImages = resultArea.querySelectorAll('img');
-            oldImages.forEach(img => img.remove());
+    btn.addEventListener('click', async () => {
+        const prompt = promptInput.value.trim();
+        if (!prompt) return alert("Por favor, digite um comando!");
+
+        // Estado de Carregamento
+        btn.disabled = true;
+        btn.innerText = "Gerando... (Aguarde)";
+        resultDiv.innerHTML = '<div class="loader"></div>';
+
+        try {
+            const response = await hf.textToImage({
+                model: MODEL_ID,
+                inputs: prompt,
+                parameters: {
+                    negative_prompt: "blurry, bad quality, distorted",
+                }
+            });
+
+            // Converte o Blob em uma URL de imagem
+            const imageUrl = URL.createObjectURL(response);
+            resultDiv.innerHTML = `<img src="${imageUrl}" alt="AI Generated Image">`;
             
-            errorMsg.style.display = 'none';
-            loadingMsg.style.display = 'block';
-            btn.disabled = true;
-            btn.innerText = "Gerando...";
-
-            try {
-                // 3. Chamada da API usando Puter.js
-                // A função retorna um elemento HTML <img> diretamente
-                const imageElement = await puter.ai.txt2img(prompt, { 
-                    model: modelSelect.value 
-                });
-
-                // 4. Exibir o resultado
-                loadingMsg.style.display = 'none';
-                resultArea.appendChild(imageElement);
-
-            } catch (err) {
-                // 5. Tratamento de erros
-                console.error(err);
-                loadingMsg.style.display = 'none';
-                errorMsg.innerText = "Erro ao gerar imagem: " + (err.message || "Tente novamente mais tarde.");
-                errorMsg.style.display = 'block';
-            } finally {
-                // 6. Restaurar botão
-                btn.disabled = false;
-                btn.innerText = "Criar Imagem";
-            }
+        } catch (error) {
+            console.error(error);
+            resultDiv.innerHTML = `<p style="color: #ff4d4d; padding: 10px;">Erro: ${error.message}. Tente novamente em instantes.</p>`;
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Gerar Imagem";
         }
+    });
+</script>
 
-        // Permitir envio ao pressionar Enter
-        document.getElementById('prompt-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                generateImage();
-            }
-        });
-    </script>
 </body>
 </html>
