@@ -3,77 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Image Generator - Ultra Fast</title>
-    <script src="https://cdn.jsdelivr.net/npm/@huggingface/inference@2.6.4/dist/index.umd.min.js"></script>
+    <title>AI Image Generator - Seguro</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .container { background: #1e1e1e; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 90%; max-width: 500px; text-align: center; }
-        h1 { color: #00d4ff; margin-bottom: 1rem; }
-        textarea { width: 100%; height: 100px; padding: 10px; border-radius: 8px; border: none; background: #2d2d2d; color: white; resize: none; box-sizing: border-box; margin-bottom: 1rem; }
-        button { background: #00d4ff; color: #121212; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
-        button:hover { background: #008fb3; }
-        button:disabled { background: #555; cursor: not-allowed; }
-        #result { margin-top: 1.5rem; width: 100%; min-height: 300px; display: flex; align-items: center; justify-content: center; border: 2px dashed #333; border-radius: 10px; overflow: hidden; }
-        img { width: 100%; height: auto; display: block; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #00d4ff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: sans-serif; background: #121212; color: white; text-align: center; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 12px; }
+        textarea { width: 100%; height: 80px; margin-bottom: 10px; border-radius: 5px; padding: 10px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #00d4ff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #result { margin-top: 20px; min-height: 200px; border: 1px dashed #444; display: flex; align-items: center; justify-content: center; }
+        img { width: 100%; border-radius: 8px; }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h1>Z-Image Generator</h1>
-    <p>Modelo: Tongyi-MAI/Z-Image-Turbo</p>
-    <textarea id="prompt" placeholder="Descreva a imagem que você quer gerar (em inglês funciona melhor)..."></textarea>
-    <button id="generateBtn">Gerar Imagem</button>
-
-    <div id="result">
-        <span style="color: #666;">A imagem aparecerá aqui</span>
+    <div class="container">
+        <h2>AI Generator (Vercel)</h2>
+        <textarea id="prompt" placeholder="Descreva a imagem..."></textarea>
+        <button id="genBtn">Gerar Imagem</button>
+        <div id="result">A imagem aparecerá aqui</div>
     </div>
-</div>
 
-<script>
-    // Configurações
-    const HF_TOKEN = "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";
-    const MODEL_ID = "Tongyi-MAI/Z-Image-Turbo"; // O modelo que você escolheu (Opção 2)
+    <script>
+        document.getElementById('genBtn').addEventListener('click', async () => {
+            const prompt = document.getElementById('prompt').value;
+            const btn = document.getElementById('genBtn');
+            const resultDiv = document.getElementById('result');
 
-    const hf = new window.HfInference(HF_TOKEN);
-    
-    const btn = document.getElementById('generateBtn');
-    const promptInput = document.getElementById('prompt');
-    const resultDiv = document.getElementById('result');
+            if(!prompt) return alert("Digite algo!");
 
-    btn.addEventListener('click', async () => {
-        const prompt = promptInput.value.trim();
-        if (!prompt) return alert("Por favor, digite um comando!");
+            btn.disabled = true;
+            btn.innerText = "Processando no Servidor...";
+            resultDiv.innerHTML = "Carregando...";
 
-        // Estado de Carregamento
-        btn.disabled = true;
-        btn.innerText = "Gerando... (Aguarde)";
-        resultDiv.innerHTML = '<div class="loader"></div>';
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
 
-        try {
-            const response = await hf.textToImage({
-                model: MODEL_ID,
-                inputs: prompt,
-                parameters: {
-                    negative_prompt: "blurry, bad quality, distorted",
-                }
-            });
+                if (!response.ok) throw new Error('Erro na geração');
 
-            // Converte o Blob em uma URL de imagem
-            const imageUrl = URL.createObjectURL(response);
-            resultDiv.innerHTML = `<img src="${imageUrl}" alt="AI Generated Image">`;
-            
-        } catch (error) {
-            console.error(error);
-            resultDiv.innerHTML = `<p style="color: #ff4d4d; padding: 10px;">Erro: ${error.message}. Tente novamente em instantes.</p>`;
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "Gerar Imagem";
-        }
-    });
-</script>
-
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                resultDiv.innerHTML = `<img src="${url}">`;
+            } catch (e) {
+                resultDiv.innerHTML = "Erro: " + e.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Gerar Imagem";
+            }
+        });
+    </script>
 </body>
 </html>
