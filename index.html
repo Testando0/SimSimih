@@ -2,65 +2,40 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>AI Generator - Versão Funcional</title>
+    <title>Pegar Token Puter</title>
+    <script src="https://js.puter.com/v2/"></script>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
-        .container { max-width: 500px; margin: auto; border: 1px solid #333; padding: 20px; border-radius: 15px; background: #111; }
-        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #000; color: #fff; outline: none; }
-        button { width: 94%; padding: 12px; background: #00ff88; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        #output { margin-top: 20px; min-height: 400px; background: #050505; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-        img { width: 100%; border-radius: 10px; display: none; }
-        .loading-text { color: #00ff88; display: none; }
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f0f0f0; }
+        .box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: inline-block; }
+        textarea { width: 100%; height: 100px; margin-top: 10px; font-family: monospace; }
+        button { background: #6366f1; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 5px; }
     </style>
 </head>
 <body>
+    <div class="box">
+        <h2>Seu Token Puter</h2>
+        <p>Clique abaixo para revelar seu token de acesso.</p>
+        <button onclick="getToken()">Revelar Token</button>
+        <br><br>
+        <textarea id="token-display" placeholder="Seu token aparecerá aqui..."></textarea>
+    </div>
 
-<div class="container">
-    <h2>Gerador Sem Erros</h2>
-    <input type="text" id="prompt" placeholder="Descreva a imagem...">
-    <button id="btn" onclick="gerar()">GERAR IMAGEM</button>
-    <div id="status" class="loading-text">GERANDO... AGUARDE...</div>
-    <div id="output">Sua imagem aparecerá aqui</div>
-</div>
-
-<script>
-    function gerar() {
-        const prompt = document.getElementById('prompt').value;
-        const output = document.getElementById('output');
-        const status = document.getElementById('status');
-        const btn = document.getElementById('btn');
-
-        if (!prompt) return;
-
-        btn.disabled = true;
-        status.style.display = 'block';
-        output.innerHTML = '';
-
-        // Criamos um ID aleatório para evitar que o navegador use o cache da imagem anterior
-        const seed = Math.floor(Math.random() * 1000000);
-        
-        // Esta URL gera a imagem diretamente. Não precisa de Fetch, por isso NÃO DÁ ERRO.
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?seed=${seed}&width=1024&height=1024&nologo=true`;
-
-        const img = new Image();
-        img.src = imageUrl;
-        img.style.display = 'none';
-
-        img.onload = function() {
-            output.innerHTML = '';
-            output.appendChild(img);
-            img.style.display = 'block';
-            status.style.display = 'none';
-            btn.disabled = false;
-        };
-
-        img.onerror = function() {
-            output.innerHTML = "Erro ao processar. Tente outro prompt.";
-            status.style.display = 'none';
-            btn.disabled = false;
-        };
-    }
-</script>
-
+    <script>
+        async function getToken() {
+            // Isso força o login se não estiver logado
+            if (!puter.auth.isSignedIn()) {
+                await puter.auth.signIn();
+            }
+            // Pega o token atual
+            const token = puter.authToken;
+            
+            if (token) {
+                document.getElementById('token-display').value = token;
+                alert("Token copiado para a caixa de texto!");
+            } else {
+                alert("Não foi possível obter o token. Tente desativar bloqueadores de popup.");
+            }
+        }
+    </script>
 </body>
 </html>
